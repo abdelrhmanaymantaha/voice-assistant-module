@@ -1,0 +1,9 @@
+pandas
+paho-mqtt
+pyaudio
+pyttsx3
+torch
+openai-whisper
+scikit-learn
+joblib
+requests

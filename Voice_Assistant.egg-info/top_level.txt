@@ -1,0 +1,6 @@
+Command_extraction
+Recorder
+Speaker
+SpeechToText
+TextPreProcessing
+command_execute

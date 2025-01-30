@@ -1,0 +1,19 @@
+Metadata-Version: 2.2
+Name: Voice-Assistant
+Version: 1.0
+Summary: A simple voice assistant
+Author: Abdelrhman ayman
+Author-email: Abdotha5@gmail.com
+Requires-Dist: pandas
+Requires-Dist: paho-mqtt
+Requires-Dist: pyaudio
+Requires-Dist: pyttsx3
+Requires-Dist: torch
+Requires-Dist: openai-whisper
+Requires-Dist: scikit-learn
+Requires-Dist: joblib
+Requires-Dist: requests
+Dynamic: author
+Dynamic: author-email
+Dynamic: requires-dist
+Dynamic: summary
