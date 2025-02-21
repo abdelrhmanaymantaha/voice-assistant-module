@@ -1,10 +1,11 @@
-
+from Speaker import speaker
 def command_execute(command:dict, previous_command:dict=None) -> dict:
     if command['intent'] == 'turn_on':
         if command["device"] == 'light' and command['location'] == None and previous_command != None and previous_command['device'] == 'light':
             command['location'] = previous_command['location']
-
-        print(f"Turning on {command['device']} at {command['location']}")
+        response_msg = f"Turning on {command['device']} at {command['location']}"
+        print(response_msg)
+        speaker.text_to_sound(response_msg)
         response = {
             "device": command['device'],
             "location": command['location'],
@@ -15,7 +16,9 @@ def command_execute(command:dict, previous_command:dict=None) -> dict:
         if command["device"] == 'light' and command['location'] == None and previous_command != None and previous_command['device'] == 'light':
             command['location'] = previous_command['location']
 
-        print(f"Turning off {command['device']} at {command['location']}")
+        response_msg = f"Turning off {command['device']} at {command['location']}"
+        print(response_msg)
+        speaker.text_to_sound(response_msg)
         response = {
             "device": command['device'],
             "location": command['location'],
@@ -23,7 +26,9 @@ def command_execute(command:dict, previous_command:dict=None) -> dict:
             "value": None
         }
     elif command['intent'] == 'set_temperature':  
-        print(f"Setting temperature of {command['device']} at {command['location']} to {command['value']}°C")
+        response_msg = f"Setting temperature of {command['device']} at {command['location']} to {command['value']}°C"
+        print(response_msg)
+        speaker.text_to_sound(response_msg)
         response = {
             "device": command['device'],
             "location": command['location'],
@@ -31,7 +36,9 @@ def command_execute(command:dict, previous_command:dict=None) -> dict:
             "value": command['value']
         }
     elif command['intent'] == 'set_fan_speed':
-        print(f"Setting fan speed of {command['device']} at {command['location']} to {command['value']}")
+        response_msg = f"Setting fan speed of {command['device']} at {command['location']} to {command['value']}"
+        print(response_msg)
+        speaker.text_to_sound(response_msg)
         response = {
             "device": command['device'],
             "location": command['location'],
@@ -39,18 +46,22 @@ def command_execute(command:dict, previous_command:dict=None) -> dict:
             "value": command['value'],
         }
     elif command['intent'] == 'open_door':
-        print(f"Opening {command['location']} door")
+        response_msg = f"Opening the door"
+        print(response_msg)
+        speaker.text_to_sound(response_msg)
         response = {
             "device": "door",
-            "location": command['location'],
+            "location":None,
             "status": True,
             "value": None
         }
     elif command['intent'] == 'close_door':
-        print(f"Closing {command['location']} door")
+        response_msg = f"Closing the door"
+        print(response_msg)
+        speaker.text_to_sound(response_msg)
         response = {
             "device": "door",
-            "location": command['location'],
+            "location": None,
             "status": False,
             "value": None
         }

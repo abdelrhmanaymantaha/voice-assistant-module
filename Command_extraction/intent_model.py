@@ -1,137 +1,77 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 import joblib
+from TextPreProcessing import text_processing as tp
+import json
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 class SmartHomeIntentModel:
     def __init__(self):
         self.vectorizer = TfidfVectorizer(ngram_range=(1,2))  # Using bigrams
-        self.model = LogisticRegression()
+        self.model = LogisticRegression(solver='liblinear', max_iter=5000, class_weight='balanced')
+        self.model = SVC(kernel='linear', probability=True)  # Use SVM
 
     def load_data(self):
-        data = [
-    # Turn On/Off Devices
-    {"text": "Turn on the living room lights", "intent": "turn_on"},
-    {"text": "Switch off the living room lights", "intent": "turn_off"},
-    {"text": "Power on the bedroom fan", "intent": "turn_on"},
-    {"text": "Power off the bedroom fan", "intent": "turn_off"},
-    {"text": "Turn on the air conditioner", "intent": "turn_on"},
-    {"text": "Turn off the air conditioner", "intent": "turn_off"},
-    {"text": "Power on the TV", "intent": "turn_on"},
-    {"text": "Turn off the TV", "intent": "turn_off"},
-    {"text": "Activate the heater", "intent": "turn_on"},
-    {"text": "Deactivate the heater", "intent": "turn_off"},
-    {"text": "Start the coffee machine", "intent": "turn_on"},
-    {"text": "Stop the coffee machine", "intent": "turn_off"},
-    {"text": "Enable the security system", "intent": "turn_on"},
-    {"text": "Disable the security system", "intent": "turn_off"},
-    {"text": "Power up the living room fan", "intent": "turn_on"},
-    {"text": "Power down the living room fan", "intent": "turn_off"},
-    {"text": "Turn on the kitchen lights", "intent": "turn_on"},
-    {"text": "Turn off the kitchen lights", "intent": "turn_off"},
-    {"text": "Switch on the bathroom fan", "intent": "turn_on"},
-    {"text": "Switch off the bathroom fan", "intent": "turn_off"},
-    {"text": "Turn on the ceiling fan", "intent": "turn_on"},
-    {"text": "Turn off the ceiling fan", "intent": "turn_off"},
-    {"text": "Power up the stereo", "intent": "turn_on"},
-    {"text": "Power down the stereo", "intent": "turn_off"},
-    {"text": "Enable the sprinkler system", "intent": "turn_on"},
-    {"text": "Disable the sprinkler system", "intent": "turn_off"},
-    {"text": "Start the dishwasher", "intent": "turn_on"},
-    {"text": "Stop the dishwasher", "intent": "turn_off"},
-    {"text": "Activate the outdoor lights", "intent": "turn_on"},
-    {"text": "Deactivate the outdoor lights", "intent": "turn_off"},
-    {"text": "Power up the garage lights", "intent": "turn_on"},
-    {"text": "Power down the garage lights", "intent": "turn_off"},
-    {"text": "Activate the washing machine", "intent": "turn_on"},
-    {"text": "Deactivate the washing machine", "intent": "turn_off"},
-
-    # Set Temperature of Any Device
-    {"text": "Set the thermostat to 72 degrees", "intent": "set_temperature"},
-    {"text": "Set the heater to 75 degrees", "intent": "set_temperature"},
-    {"text": "Adjust the AC to 20 degrees", "intent": "set_temperature"},
-    {"text": "Set the bedroom temperature to 22 degrees", "intent": "set_temperature"},
-    {"text": "Change the thermostat to 24 degrees", "intent": "set_temperature"},
-    {"text": "Set the office heater to 78 degrees", "intent": "set_temperature"},
-    {"text": "Cool the room to 18 degrees", "intent": "set_temperature"},
-    {"text": "Increase the temperature to 25 degrees", "intent": "set_temperature"},
-    {"text": "Lower the AC to 19 degrees", "intent": "set_temperature"},
-    {"text": "Set the living room temperature to 70 degrees", "intent": "set_temperature"},
-    {"text": "Set the kitchen to 68 degrees", "intent": "set_temperature"},
-    {"text": "Adjust the office to 72 degrees", "intent": "set_temperature"},
-    {"text": "Change the bedroom temperature to 74 degrees", "intent": "set_temperature"},
-    {"text": "Set the bathroom temperature to 76 degrees", "intent": "set_temperature"},
-    {"text": "Cool down the living room to 20 degrees", "intent": "set_temperature"},
-    {"text": "Increase the kitchen temperature to 22 degrees", "intent": "set_temperature"},
-    {"text": "Lower the bedroom temperature to 18 degrees", "intent": "set_temperature"},
-    {"text": "Set the garage to 65 degrees", "intent": "set_temperature"},
-    {"text": "Adjust the basement to 70 degrees", "intent": "set_temperature"},
-    {"text": "Change the attic to 75 degrees", "intent": "set_temperature"},
-    
-    # Open/Close Door
-    {"text": "Open the front door", "intent": "open_door"},
-    {"text": "Close the front door", "intent": "close_door"},
-    {"text": "Unlock the garage door", "intent": "open_door"},
-    {"text": "Lock the garage door", "intent": "close_door"},
-    {"text": "Open the back door", "intent": "open_door"},
-    {"text": "Close the back door", "intent": "close_door"},
-    {"text": "Open the main gate", "intent": "open_door"},
-    {"text": "Close the main gate", "intent": "close_door"},
-    {"text": "Open the patio door", "intent": "open_door"},
-    {"text": "Close the patio door", "intent": "close_door"},
-    {"text": "Unlock the front door", "intent": "open_door"},
-    {"text": "Lock the front door", "intent": "close_door"},
-    {"text": "Open the basement door", "intent": "open_door"},
-    {"text": "Close the basement door", "intent": "close_door"},
-    {"text": "Open the attic door", "intent": "open_door"},
-    {"text": "Close the attic door", "intent": "close_door"},
-    {"text": "Unlock the back door", "intent": "open_door"},
-    {"text": "Lock the back door", "intent": "close_door"},
-    {"text": "Open the side door", "intent": "open_door"},
-    {"text": "Close the side door", "intent": "close_door"},
-    
-    # Set Fan Speed
-    {"text": "Set the fan speed to 3", "intent": "set_fan_speed"},
-    {"text": "Set the bedroom fan speed to level 2", "intent": "set_fan_speed"},
-    {"text": "Adjust the fan speed to 5", "intent": "set_fan_speed"},
-    {"text": "Change the fan speed to 1", "intent": "set_fan_speed"},
-    {"text": "Lower the fan speed to 2", "intent": "set_fan_speed"},
-    {"text": "Increase the fan speed to 4", "intent": "set_fan_speed"},
-    {"text": "Set the living room fan speed to 3", "intent": "set_fan_speed"},
-    {"text": "Set the kitchen fan speed to level 4", "intent": "set_fan_speed"},
-    {"text": "Adjust the office fan speed to 2", "intent": "set_fan_speed"},
-    {"text": "Change the bathroom fan speed to 1", "intent": "set_fan_speed"},
-    {"text": "Lower the ceiling fan speed to 3", "intent": "set_fan_speed"},
-    {"text": "Increase the garage fan speed to 5", "intent": "set_fan_speed"},
-    {"text": "Set the attic fan speed to 4", "intent": "set_fan_speed"},
-    {"text": "Set the basement fan speed to 2", "intent": "set_fan_speed"},
-    {"text": "Adjust the patio fan speed to 3", "intent": "set_fan_speed"},
-    {"text": "Change the living room fan speed to 5", "intent": "set_fan_speed"},
-    {"text": "Lower the kitchen fan speed to 1", "intent": "set_fan_speed"},
-    {"text": "Increase the bedroom fan speed to 4", "intent": "set_fan_speed"},
-    {"text": "Set the office fan speed to 2", "intent": "set_fan_speed"},
-    {"text": "Adjust the bathroom fan speed to 3", "intent": "set_fan_speed"},
-    
-    # Additional sample
-    {"text": "Activate the fan", "intent": "turn_on"},
-    {"text": "Deactivate the fan", "intent": "turn_off"},
-    {"text": "Switch off the lights in the kitchen", "intent": "turn_off"},
-    {"text": "Switch on the lights in the living room", "intent": "turn_on"},
-]
-
-
-        return pd.DataFrame(data)
+        """
+        Loads the dataset from a JSON file and returns a DataFrame.
+        """
+        try:
+            # Construct the full path to dataset.json
+            file_path = 'Command_extraction/dataset.json'  # Use forward slashes
+            print(f"Loading data from: {file_path}")  # Debugging: Print the file path
+            
+            # Load the dataset from the JSON file
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+            
+            # Convert the data to a DataFrame
+            df = pd.DataFrame(data)
+            df['text'] = df['text'].apply(tp.text_preprocessor)
+            print("Data loaded successfully!")  # Debugging: Confirm data is loaded
+            return df
+        
+        except Exception as e:
+            print(f"Error loading data: {e}")
+            return None
 
     def train(self, df):
-        X_train, X_test, y_train, y_test = train_test_split(df["text"], df["intent"], test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(df["text"], df["intent"], test_size=0.4, random_state=42, stratify=df["intent"])
         X_train_tfidf = self.vectorizer.fit_transform(X_train)
         X_test_tfidf = self.vectorizer.transform(X_test)
-        self.model.fit(X_train_tfidf, y_train)
+
+        # Define hyperparameters for tuning
+        param_grid = {
+            'C': [0.1, 1, 10],  # Regularization strength
+            'penalty': ['l1', 'l2'],  # Regularization type
+        }
+        
+        # Perform grid search
+        grid_search = GridSearchCV(LogisticRegression(solver='liblinear',max_iter=5000), param_grid, cv=5, scoring='accuracy')
+        grid_search.fit(X_train_tfidf, y_train)
+        
+
+
+        # Use the best model
+        self.model = grid_search.best_estimator_
+        
+        # Print best parameters and accuracy
+        print("Best Parameters:", grid_search.best_params_)
+        print("Best Cross-Validation Accuracy:", grid_search.best_score_)
+        
+        # Evaluate the model
         y_pred = self.model.predict(X_test_tfidf)
+        report = classification_report(y_test, y_pred, output_dict=True)
         print(classification_report(y_test, y_pred))
+        self.extract_feature_importance(X_train_tfidf, y_train)
+
+        return report
+
 
     def save_model(self, model_path, vectorizer_path):
         joblib.dump(self.model, model_path)
@@ -141,15 +81,65 @@ class SmartHomeIntentModel:
         self.model = joblib.load(model_path)
         self.vectorizer = joblib.load(vectorizer_path)
 
-    def predict_intent(self, text, threshold=0.3):
+    def predict_intent(self, text, threshold=0.36):
         text_tfidf = self.vectorizer.transform([text])
         probabilities = self.model.predict_proba(text_tfidf)
         max_prob = max(probabilities[0])
-        print(f"Max Probability: {max_prob}")
+        print(f"Probability: {max_prob}")
         print(f"Predicted Intent: {self.model.predict(text_tfidf)[0]}")
         if max_prob < threshold:
             return "unsupported"
         return self.model.predict(text_tfidf)[0]
+    
+    
+
+    def extract_feature_importance(self, X_train_tfidf, y_train):
+        """
+        Extracts and visualizes feature importance (coefficients) for each class.
+        """
+        # Get feature names (words) from the vectorizer
+        feature_names = self.vectorizer.get_feature_names_out()
+
+        # Get coefficients from the logistic regression model
+        coefficients = self.model.coef_
+
+        # Iterate over each class and its corresponding coefficients
+        for i, class_name in enumerate(self.model.classes_):
+            print(f"\nClass: {class_name}")
+            # Sort features by their absolute coefficient values (most important first)
+            top_features = sorted(zip(feature_names, coefficients[i]), key=lambda x: abs(x[1]), reverse=True)[:20]  # Top 10 features
+            for feature, coef in top_features:
+                print(f"  {feature}: {coef:.4f}")
+
+        # Visualize feature importance for a specific class
+        # self.visualize_feature_importance(feature_names, coefficients)
+
+    def visualize_feature_importance(self, feature_names, coefficients):
+        """
+        Visualizes feature importance using bar plots and heatmaps.
+        """
+        for i in range(6):      
+            # Plot top features for a specific class
+            class_index = i  # Index of the class you want to analyze
+            top_n = 20  # Number of top features to display
+            top_features = sorted(zip(feature_names, coefficients[class_index]), key=lambda x: abs(x[1]), reverse=True)[:top_n]
+            features, importance = zip(*top_features)
+
+            plt.figure(figsize=(10, 6))
+            plt.barh(features, importance, color='skyblue')
+            plt.xlabel('Coefficient Value')
+            plt.title(f'Top {top_n} Features for Class: {self.model.classes_[class_index]}')
+            plt.show()
+
+        # Create a heatmap for all classes
+        coef_df = pd.DataFrame(coefficients, columns=feature_names, index=self.model.classes_)
+        plt.figure(figsize=(12, 8))
+        sns.heatmap(coef_df, cmap='coolwarm', center=0)
+        plt.title('Feature Importance (Coefficients) for Each Class')
+        plt.xlabel('Features (Words)')
+        plt.ylabel('Classes (Intents)')
+        plt.show()
+
     
 if __name__ == "__main__":
     model = SmartHomeIntentModel()
@@ -158,24 +148,29 @@ if __name__ == "__main__":
     model.save_model("smart_home_intent_model.pkl", "tfidf_vectorizer.pkl")
     model.load_model("smart_home_intent_model.pkl", "tfidf_vectorizer.pkl")
 
+
     new_input = [
         "Turn off the living room lights",
-        "Set the thermostat to 72 degrees",
-        "Open the front door",
-        "Turn on the bedroom fan",
-        "Turn on the air conditioner",
-        "Turn on the heater",
-        "Turn on the TV",
-        "turn the lights in the living room off",
-        "set temperature to 22 in the bedroom ",
-        "i want you to turn the fan in the living room off",
-        "tell me a joke",
-        "what is the weather like today",
-        "play some music",
-        "increase the volume",
+        "open the lights in the living room",
+        'open the livng room light',
+        'Activate the lights in the living room',
+        'Open the lights in the bedroom',
+        'Open the light in the living room',
+        'turn on the light in the bedroom',
+        'what is the weather like in egypt',
+        'turn on the lights in the living room',
+        'open the door for the delevary',
+        'lock the door ',
+        'set the living room temperature for 25 ',
+        'tell me a joke',
+        'set the temperature in the living to 22',
+        'add a new mode',
+        'activate mode'
+
     ]
     for text in new_input:
-        intent = model.predict_intent(text)
         print(f"Input: {text}")
+        text = tp.text_preprocessor(text)
+        intent = model.predict_intent(text)
         print(f"Predicted Intent: {intent}")
-        print()
+        print('-'*50)

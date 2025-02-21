@@ -17,5 +17,8 @@ setup(
         'scikit-learn',
         'joblib',
         'requests',
+        "matplotlib",
+        "seaborn",
+        "sqlalchemy",
     ],
 )

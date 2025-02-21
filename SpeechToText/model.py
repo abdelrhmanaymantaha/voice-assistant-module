@@ -12,20 +12,21 @@ def patch_torch_load():
     finally:
         torch.load = original_load
 
-def speech_to_text(source_file):
-    # Load the Whisper model with patched torch.load
-    with patch_torch_load():
-        model = whisper.load_model("small.en")
+class SpeechToTextPipeline:
+    def __init__(self, model_name="small.en"):
+        """Initialize the Whisper model as a pipeline."""
+        with patch_torch_load():
+            self.model = whisper.load_model(model_name)
     
-    # Transcribe the audio
-    result = model.transcribe(source_file)
-
-    # Return the transcribed text
-    return result["text"]
+    def transcribe(self, audio_path):
+        """Transcribe an audio file and return text."""
+        result = self.model.transcribe(audio_path)
+        return result["text"]
 
 # Example usage
 if __name__ == "__main__":
-    audio_file = "D:/BFOE/grad__project/voice-assistant/output.wav"  
-    transcribed_text = speech_to_text(audio_file)
-    print("Transcribed Text:")
-    print(transcribed_text)
+    pipeline = SpeechToTextPipeline()  # Load the model once
+    audio_file = "D:/BFOE/grad__project/voice-assistant/output.wav"
+    
+    transcribed_text = pipeline.transcribe(audio_file)
+    print("Transcribed Text:", transcribed_text)

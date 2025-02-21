@@ -14,6 +14,29 @@ CHUNK = 1024              # Buffer size
 SILENCE_THRESHOLD = 500   # Threshold to detect silence
 SILENCE_DURATION = 1.5    # Duration of silence to stop recording (in seconds)
 
+
+def play_wav(filename):
+    chunk = 1024  # Buffer size
+    wf = wave.open(filename, 'rb')
+    p = pyaudio.PyAudio()
+
+    # Open a stream
+    stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+                    channels=wf.getnchannels(),
+                    rate=wf.getframerate(),
+                    output=True)
+
+    data = wf.readframes(chunk)
+
+    while data:
+        stream.write(data)
+        data = wf.readframes(chunk)
+
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+    wf.close()
+
 def record_audio_silence(output_file="output.wav"):
     """
     Records audio until silence is detected and saves it to a WAV file.
@@ -67,6 +90,7 @@ def record_audio_silence(output_file="output.wav"):
         wf.writeframes(b''.join(frames))
 
     print(f"Audio saved as {output_file}")
+    play_wav("beepbeep.wav")
 
 
 def record_audio_duration(duration, output_file="output.wav"):

@@ -1,5 +1,6 @@
 import pyttsx3
 
+
 def text_to_sound(word):
     # Initialize the TTS engine
     engine = pyttsx3.init()
@@ -12,5 +13,12 @@ def text_to_sound(word):
     engine.say(word)
     engine.runAndWait()
 
+
+
+
+
+
 if __name__ == "__main__":
     text_to_sound("Hello, how are you today?")
+
+    
