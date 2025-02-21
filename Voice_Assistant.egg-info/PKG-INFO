@@ -13,6 +13,9 @@ Requires-Dist: openai-whisper
 Requires-Dist: scikit-learn
 Requires-Dist: joblib
 Requires-Dist: requests
+Requires-Dist: matplotlib
+Requires-Dist: seaborn
+Requires-Dist: sqlalchemy
 Dynamic: author
 Dynamic: author-email
 Dynamic: requires-dist

@@ -2,6 +2,7 @@ setup.py
 Command_extraction/__init__.py
 Command_extraction/command_extract.py
 Command_extraction/intent_model.py
+Command_extraction/test.py
 Recorder/__init__.py
 Recorder/recorder.py
 Speaker/__init__.py
@@ -19,3 +20,5 @@ Voice_Assistant.egg-info/top_level.txt
 command_execute/__init__.py
 command_execute/command_executor.py
 command_execute/mqtt.py
+sql_modes/__init__.py
+sql_modes/mode_database.py
