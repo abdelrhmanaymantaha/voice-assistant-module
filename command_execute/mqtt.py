@@ -1,5 +1,6 @@
 import paho.mqtt.client as mqtt
-import json  # For JSON serialization
+import json
+import time  # For adding delays
 
 class MQTTSender:
     def __init__(self, broker, port, topic, username=None, password=None):
@@ -42,24 +43,29 @@ class MQTTSender:
         :param message: The message to publish (can be a string or JSON).
         """
         try:
+            # If the message is a dictionary, convert it to JSON
+            if isinstance(message, dict):
+                message = json.dumps(message)
+            
             # Publish the message
             self.client.publish(self.topic, message)
             print(f"Message '{message}' published to topic '{self.topic}'")
         except Exception as e:
             print(f"An error occurred: {e}")
 
-def mqtt_send(message: dict, username, password):
+def mqtt_send(message: dict, username, password, topic: str) -> None:
     """
     Helper function to send a JSON message via MQTT.
 
     :param message: A dictionary to be serialized into JSON.
     :param username: The username for authentication (optional).
     :param password: The password for authentication (optional).
+    :param topic: The MQTT topic to publish the message to.
     """
     mqtt_sender = MQTTSender(
         broker='broker.emqx.io',
         port=1883,
-        topic='home/assistant',
+        topic=topic,
         username=username,
         password=password
     )
@@ -67,13 +73,11 @@ def mqtt_send(message: dict, username, password):
     
     # Start the loop to process network traffic and dispatch callbacks
     mqtt_sender.client.loop_start()
+    time.sleep(2)  # Wait for 1 second to ensure the connection is established
     
-    # Convert the dictionary to a JSON string
-    json_message = json.dumps(message)
+    # Send the message
+    mqtt_sender.send_message(message)
     
-    # Send the JSON message
-    mqtt_sender.send_message(json_message)
-    
-    # Give some time for the message to be sent
+    # Stop the loop and disconnect
     mqtt_sender.client.loop_stop()
     mqtt_sender.client.disconnect()

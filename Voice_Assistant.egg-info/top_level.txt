@@ -4,3 +4,4 @@ Speaker
 SpeechToText
 TextPreProcessing
 command_execute
+sql_modes
