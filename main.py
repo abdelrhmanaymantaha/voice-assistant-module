@@ -5,12 +5,13 @@ from SpeechToText import model
 from command_execute.command_executor import command_execute
 from command_execute import mqtt
 from TextPreProcessing import text_processing
+from sql_modes.mode_database import ModeDatabase
 
 SPEECH_FILE = "output.wav"
 AUDIO_DURATION = 2
 previous_command = None
 pipline = model.SpeechToTextPipeline()
-
+db = ModeDatabase()
 
 def get_user_commands():
     commands_list = []
@@ -23,11 +24,11 @@ def get_user_commands():
             return commands_list
         commands_list.append(command)
 
-def create_mode(self):
+def create_mode():
     mode_name = input("mode name: ")
     print(f"enter the commands of {mode_name}")
-    command_list = self.get_user_commands()
-    self.add_mode(mode_name= mode_name, commands= command_list)
+    command_list = get_user_commands()
+    db.add_mode(mode_name= mode_name, commands= command_list)
     print('your mode created successfully')
         
 while True:
