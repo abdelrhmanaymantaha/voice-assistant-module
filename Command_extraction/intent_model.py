@@ -13,7 +13,7 @@ import seaborn as sns
 
 class SmartHomeIntentModel:
     def __init__(self):
-        self.vectorizer = TfidfVectorizer(ngram_range=(1,2))  # Using bigrams
+        self.vectorizer = TfidfVectorizer(ngram_range=(1,1))  # Using bigrams
         self.model = LogisticRegression(solver='liblinear', max_iter=5000, class_weight='balanced')
         self.model = SVC(kernel='linear', probability=True)  # Use SVM
 
@@ -34,6 +34,7 @@ class SmartHomeIntentModel:
             df = pd.DataFrame(data)
             df['text'] = df['text'].apply(tp.text_preprocessor)
             print("Data loaded successfully!")  # Debugging: Confirm data is loaded
+            print(df['intent'].value_counts())  # Check class distribution
             return df
         
         except Exception as e:
@@ -41,7 +42,7 @@ class SmartHomeIntentModel:
             return None
 
     def train(self, df):
-        X_train, X_test, y_train, y_test = train_test_split(df["text"], df["intent"], test_size=0.4, random_state=42, stratify=df["intent"])
+        X_train, X_test, y_train, y_test = train_test_split(df["text"], df["intent"], test_size=0.3, random_state=40, stratify=df["intent"])
         X_train_tfidf = self.vectorizer.fit_transform(X_train)
         X_test_tfidf = self.vectorizer.transform(X_test)
 
@@ -68,7 +69,7 @@ class SmartHomeIntentModel:
         y_pred = self.model.predict(X_test_tfidf)
         report = classification_report(y_test, y_pred, output_dict=True)
         print(classification_report(y_test, y_pred))
-        self.extract_feature_importance(X_train_tfidf, y_train)
+        # self.extract_feature_importance(X_train_tfidf, y_train)
 
         return report
 
@@ -81,11 +82,12 @@ class SmartHomeIntentModel:
         self.model = joblib.load(model_path)
         self.vectorizer = joblib.load(vectorizer_path)
 
-    def predict_intent(self, text, threshold=0.36):
+    def predict_intent(self, text, threshold=0.5):
         text_tfidf = self.vectorizer.transform([text])
         probabilities = self.model.predict_proba(text_tfidf)
         max_prob = max(probabilities[0])
         print(f"Probability: {max_prob}")
+        # print(f'probabilities: {probabilities}')
         print(f"Predicted Intent: {self.model.predict(text_tfidf)[0]}")
         if max_prob < threshold:
             return "unsupported"
@@ -165,12 +167,13 @@ if __name__ == "__main__":
         'tell me a joke',
         'set the temperature in the living to 22',
         'add a new mode',
-        'activate mode'
+        'activate mode',
 
     ]
     for text in new_input:
         print(f"Input: {text}")
         text = tp.text_preprocessor(text)
+        print(f"Processed text: {text}")
         intent = model.predict_intent(text)
         print(f"Predicted Intent: {intent}")
         print('-'*50)

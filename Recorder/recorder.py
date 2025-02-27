@@ -12,7 +12,7 @@ CHANNELS = 1              # Mono audio
 RATE = 44100              # Sampling rate (44.1 kHz)
 CHUNK = 1024              # Buffer size
 SILENCE_THRESHOLD = 500   # Threshold to detect silence
-SILENCE_DURATION = 1.5    # Duration of silence to stop recording (in seconds)
+SILENCE_DURATION = 2    # Duration of silence to stop recording (in seconds)
 
 
 def play_wav(filename):
@@ -53,7 +53,7 @@ def record_audio_silence(output_file="output.wav"):
                         frames_per_buffer=CHUNK)
 
     print("Recording... Speak now!")
-
+    play_wav("beepbeep.wav")
     frames = []
     silence_counter = 0
     recording = True

@@ -1,5 +1,6 @@
 __pycache__/
 /assistant_venv
+/myvenv
 /build
 .vscode/
 .idea/

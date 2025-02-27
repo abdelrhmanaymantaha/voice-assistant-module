@@ -4,10 +4,7 @@ from Speaker import speaker
 from Recorder import recorder
 from SpeechToText import model
 from TextPreProcessing import text_processing 
-if __name__ == "__main__":
-    from intent_model import SmartHomeIntentModel
-else:
-    from Command_extraction.intent_model import SmartHomeIntentModel
+from Command_extraction.intent_model import SmartHomeIntentModel
 
 
 intent_patterns = {
@@ -138,7 +135,7 @@ def extract_command_data(text: str, max_retries: int = 2) -> dict:
     """
     intent = get_intent_model(text)
     if intent == "unsupported":
-        return None
+        return {"intent": "unsupported", "device": 'None', "location": 'None', "value": 'None'}
 
     device = None
     location = None
@@ -204,7 +201,7 @@ def extract_command_data(text: str, max_retries: int = 2) -> dict:
     if (intent in ["turn_on", "turn_off"] and (device is None or location is None)) or \
        (intent == "set_temperature" and (location is None or value is None)) or \
        (intent == "set_fan_speed" and (location is None or value is None)):
-        return None
+        return {"intent": "unsupported", "device": 'None', "location": 'None', "value": 'None'}
 
     return {"intent": intent, "device": device, "location": location, "value": value}
 
@@ -225,29 +222,32 @@ def uncompleted_command (missing_entity:str) -> str:
     entity = text_processing.text_preprocessor(entity)
     return entity
 
+
+
+
 if __name__ == "__main__":
     # Test with different phrasings
     test_phrases = [
-        # "set temperature to 25 degrees of the heater in the living room",
-        # "set temperature of the heater in the living room to 25",
-        # "adjust the living room heater at 23°",
-        # "change temperature to 22 in the bedroom heater",
+        "set temperature to 25 degrees of the heater in the living room",
+        "set temperature of the heater in the living room to 25",
+        "adjust the living room heater at 23°",
+        "change temperature to 22 in the bedroom heater",
         "set heater to 30 degrees",
-        # "turn on the light in the kitchen",
-        # "switch on the fan in the living room",
-        # "turn the lights in the living room off",
-        # "I want you to turn the fan in the living room off",
-        # "could you please turn off the fan in the living room",
-        # "enable the ac in the bedroom",
-        # "power up the fan in the living room",
-        # "make the fan speed 3 in the bedroom",
-        # "activate the fan",
-        # 'Open the lights in the living room',
-        # 'Open the lights in the living room.',
-        # 'activate my mode',
-        # 'activate the lights in the living room',
-        # 'open the main door',
-        # 'tell me a joke',
+        "turn on the light in the kitchen",
+        "switch on the fan in the living room",
+        "turn the lights in the living room off",
+        "I want you to turn the fan in the living room off",
+        "could you please turn off the fan in the living room",
+        "enable the ac in the bedroom",
+        "power up the fan in the living room",
+        "make the fan speed 3 in the bedroom",
+        "activate the fan",
+        'Open the lights in the living room',
+        'Open the lights in the living room.',
+        'activate my mode',
+        'activate the lights in the living room',
+        'open the main door',
+        'tell me a joke',
 
 
     ]
