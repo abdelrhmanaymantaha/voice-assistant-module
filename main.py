@@ -5,11 +5,8 @@ from SpeechToText import model
 from command_execute import command_executor
 from TextPreProcessing import text_processing
 from sql_modes import mode_database
-
-
-
-
 import threading
+
 
 # Define a function to initialize components in parallel
 def initialize_components():
