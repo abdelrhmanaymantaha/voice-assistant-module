@@ -43,10 +43,7 @@ def command_execute(command:dict) -> dict:
         response_msg = "Closing the door"
 
     elif command['intent'] == 'execute_mode':
-        speaker.text_to_sound('What is the mode name?')
-        recorder.record_audio_silence('mode_name.wav')
-        mode_name = model.SpeechToTextPipeline().transcribe('mode_name.wav')
-        mode_name = text_processing.text_preprocessor(mode_name)
+        mode_name = command['mode']
         print(f"Mode name: {mode_name}")
         db = mode_database.ModeDatabase()
         response_msg = f"Activating mode {mode_name}"

@@ -98,6 +98,13 @@ class ModeDatabase:
         command_list = self.get_user_commands()
         self.add_mode(mode_name=mode_name, commands=command_list)
         print('your mode created successfully')
+    
+    def get_all_modes(self):
+        session = self.Session()
+        modes = session.query(Mode).all()
+        mode_names = [mode.name for mode in modes]  # Extract mode names
+        session.close()
+        return mode_names
 
 
 
@@ -107,5 +114,6 @@ class ModeDatabase:
 # Example usage
 if __name__ == '__main__':
     db = ModeDatabase()
-    db.create_mode()
+
+    print(db.get_all_modes())
     db.close()

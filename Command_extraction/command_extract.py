@@ -5,6 +5,7 @@ from Recorder import recorder
 from SpeechToText import model
 from TextPreProcessing import text_processing 
 from Command_extraction.intent_model import SmartHomeIntentModel
+from sql_modes import mode_database
 
 
 intent_patterns = {
@@ -125,6 +126,7 @@ def get_value(text: str):
     return None
 
 def extract_command_data(text: str, max_retries: int = 2) -> dict:
+    db = mode_database.ModeDatabase()
     """
     Extract all command components from the input text.
     Returns a dictionary with intent, device, location, and value.
@@ -142,6 +144,7 @@ def extract_command_data(text: str, max_retries: int = 2) -> dict:
     value = None
 
     if intent in ["turn_on", "turn_off"]:
+        mode = None
         device = get_device(text, devices)
         location = get_location(text, locations)
         value = None
@@ -160,6 +163,7 @@ def extract_command_data(text: str, max_retries: int = 2) -> dict:
             retries += 1
 
     elif intent == "set_temperature":
+        mode = None
         location = get_location(text, locations)
         value = get_value(text)
         device = None
@@ -179,6 +183,7 @@ def extract_command_data(text: str, max_retries: int = 2) -> dict:
             retries += 1
 
     elif intent == "set_fan_speed":
+        mode = None
         device = None
         location = get_location(text, locations)
         value = get_value(text)
@@ -196,14 +201,19 @@ def extract_command_data(text: str, max_retries: int = 2) -> dict:
             value = uncompleted_command("value")
             value = get_value(value)
             retries += 1
+    
+    elif intent == 'execute_mode':
+        device = None
+        available_modes = db.get_all_modes()
+        mode = get_location(text, available_modes)
 
     # If any required entity is still missing after retries, discard the command
     if (intent in ["turn_on", "turn_off"] and (device is None or location is None)) or \
        (intent == "set_temperature" and (location is None or value is None)) or \
        (intent == "set_fan_speed" and (location is None or value is None)):
-        return {"intent": "unsupported", "device": 'None', "location": 'None', "value": 'None'}
+        return {"intent": "unsupported", "device": 'None', "location": 'None', "value": 'None' , "mode": 'None'}
 
-    return {"intent": intent, "device": device, "location": location, "value": value}
+    return {"intent": intent, "device": device, "location": location, "value": value , "mode": mode}
 
 
 def uncompleted_command (missing_entity:str) -> str:

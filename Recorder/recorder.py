@@ -2,6 +2,7 @@ import pyaudio
 import numpy as np
 import wave
 import warnings
+import threading
 
 # Suppress FP16 warning
 warnings.filterwarnings("ignore", message="FP16 is not supported on CPU; using FP32 instead")
@@ -12,30 +13,29 @@ CHANNELS = 1              # Mono audio
 RATE = 44100              # Sampling rate (44.1 kHz)
 CHUNK = 1024              # Buffer size
 SILENCE_THRESHOLD = 500   # Threshold to detect silence
-SILENCE_DURATION = 2    # Duration of silence to stop recording (in seconds)
+SILENCE_DURATION = 2      # Duration of silence to stop recording (in seconds)
 
+# Initialize PyAudio once
+audio = pyaudio.PyAudio()
 
 def play_wav(filename):
+    """
+    Play a WAV file using PyAudio.
+    """
     chunk = 1024  # Buffer size
-    wf = wave.open(filename, 'rb')
-    p = pyaudio.PyAudio()
+    with wave.open(filename, 'rb') as wf:
+        stream = audio.open(format=audio.get_format_from_width(wf.getsampwidth()),
+                            channels=wf.getnchannels(),
+                            rate=wf.getframerate(),
+                            output=True)
 
-    # Open a stream
-    stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
-                    channels=wf.getnchannels(),
-                    rate=wf.getframerate(),
-                    output=True)
-
-    data = wf.readframes(chunk)
-
-    while data:
-        stream.write(data)
         data = wf.readframes(chunk)
+        while data:
+            stream.write(data)
+            data = wf.readframes(chunk)
 
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
-    wf.close()
+        stream.stop_stream()
+        stream.close()
 
 def record_audio_silence(output_file="output.wav"):
     """
@@ -44,19 +44,20 @@ def record_audio_silence(output_file="output.wav"):
     Args:
         output_file (str): Path to save the recorded audio file.
     """
-    # Initialize PyAudio
-    audio = pyaudio.PyAudio()
-
     # Open audio stream
     stream = audio.open(format=FORMAT, channels=CHANNELS,
                         rate=RATE, input=True,
                         frames_per_buffer=CHUNK)
 
     print("Recording... Speak now!")
-    play_wav("beepbeep.wav")
+    
+    # Play beep sound in a separate thread
+    threading.Thread(target=play_wav, args=("beepbeep.wav",)).start()
+
     frames = []
     silence_counter = 0
     recording = True
+    silence_limit = int(SILENCE_DURATION * (RATE / CHUNK))  # Precompute silence limit
 
     while recording:
         # Read audio data from the stream
@@ -73,14 +74,12 @@ def record_audio_silence(output_file="output.wav"):
             silence_counter = 0
 
         # Stop recording if silence duration is reached
-        if silence_counter > SILENCE_DURATION * (RATE / CHUNK):
+        if silence_counter > silence_limit:
             recording = False
-
 
     # Stop and close the stream
     stream.stop_stream()
     stream.close()
-    audio.terminate()
 
     # Save the recorded audio as a WAV file
     with wave.open(output_file, 'wb') as wf:
@@ -92,7 +91,6 @@ def record_audio_silence(output_file="output.wav"):
     print(f"Audio saved as {output_file}")
     play_wav("beepbeep.wav")
 
-
 def record_audio_duration(duration, output_file="output.wav"):
     """
     Records audio for a specified duration and saves it to a WAV file.
@@ -101,9 +99,6 @@ def record_audio_duration(duration, output_file="output.wav"):
         duration (float): Duration of the recording in seconds.
         output_file (str): Path to save the recorded audio file.
     """
-    # Initialize PyAudio
-    audio = pyaudio.PyAudio()
-
     # Open audio stream
     stream = audio.open(format=FORMAT, channels=CHANNELS,
                         rate=RATE, input=True,
@@ -124,7 +119,6 @@ def record_audio_duration(duration, output_file="output.wav"):
     # Stop and close the stream
     stream.stop_stream()
     stream.close()
-    audio.terminate()
 
     # Save the recorded audio as a WAV file
     with wave.open(output_file, 'wb') as wf:
