@@ -4,3 +4,7 @@ __pycache__/
 /build
 .vscode/
 .idea/
+output.wav
+mode_name.wav
+entity.wav
+command.wav
