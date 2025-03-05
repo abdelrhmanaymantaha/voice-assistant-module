@@ -12,7 +12,7 @@ MQTT_PASSWORD = "234"
 def command_execute(command:dict) -> dict:
     if command['intent'] == 'turn_on':
         mqtt_command =  'on'
-        if command['device'] == 'camera' or command['device'] == 'face id':
+        if command['device'] == 'camera' or command['device'] == 'face id camera':
             response_msg = f"Turning on The Face ID Camera"
             topic = "home/security/camera"
 
@@ -96,6 +96,7 @@ if __name__ == "__main__":
         'set the temperature in the living room to 25',
         'open the door',
         'turn on the camera',
+        
      ]
     
 

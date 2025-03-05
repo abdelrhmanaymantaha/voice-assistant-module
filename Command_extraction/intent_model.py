@@ -46,7 +46,7 @@ class SmartHomeIntentModel:
         from sklearn.metrics import classification_report
 
 
-        X_train, X_test, y_train, y_test = train_test_split(df["text"], df["intent"], test_size=0.2, random_state=40, stratify=df["intent"])
+        X_train, X_test, y_train, y_test = train_test_split(df["text"], df["intent"], test_size=0.1, random_state=42, stratify=df["intent"])
         X_train_tfidf = self.vectorizer.fit_transform(X_train)
         X_test_tfidf = self.vectorizer.transform(X_test)
 
@@ -177,6 +177,9 @@ if __name__ == "__main__":
         'set the temperature in the living to 22',
         'add a new mode',
         'activate mode',
+        'turn on the camera',
+        'open the face id camera',
+
 
     ]
     for text in new_input:

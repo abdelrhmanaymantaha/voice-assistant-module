@@ -21,7 +21,7 @@ intent_patterns = {
 
 
 locations = {"living room", "bedroom", "kitchen", "bathroom"}
-devices = {"lights", "ac", 'heater','tv', 'fan','light','TV','camera','window','face id'}
+devices = {"lights", "ac", 'heater','tv', 'fan','light','TV','camera','window','face id camera'}
 
 # Initialize the model at the beginning
 intent_model = SmartHomeIntentModel()
@@ -220,7 +220,7 @@ def extract_command_data(text: str, max_retries: int = 1) -> dict:
 
       
      # If any required entity is still missing after retries, discard the command
-        if (intent in ["turn_on", "turn_off"] and ((device is None and device != 'camera' and device != 'face id') or (device != 'camera' and device != 'face id' and location is None))) or \
+        if (intent in ["turn_on", "turn_off"] and ((device is None and device != 'camera' and device != 'face id camera') or (device != 'camera' and device != 'face id camera' and location is None))) or \
             (intent == "set_temperature" and (location is None or value is None)) or \
             (intent == "set_fan_speed" and (location is None or value is None)):
              return {"intent": "unsupported", "device": 'None', "location": 'None', "value": 'None' , "mode": 'None'}
