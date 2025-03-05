@@ -1,3 +1,4 @@
+
 import re
 import os
 from Speaker import speaker
@@ -6,6 +7,8 @@ from SpeechToText import model
 from TextPreProcessing import text_processing 
 from Command_extraction.intent_model import SmartHomeIntentModel
 from sql_modes import mode_database
+
+
 
 
 intent_patterns = {
@@ -18,11 +21,12 @@ intent_patterns = {
 
 
 locations = {"living room", "bedroom", "kitchen", "bathroom"}
-devices = {"lights", "ac", 'heater','tv' , 'fan','light'}
+devices = {"lights", "ac", 'heater','tv', 'fan','light','TV','camera','window','face id'}
 
 # Initialize the model at the beginning
 intent_model = SmartHomeIntentModel()
 
+speech_to_text_pipeline = model.SpeechToTextPipeline()
 
 # Check if model files exist
 if not os.path.exists("smart_home_intent_model.pkl") or not os.path.exists("tfidf_vectorizer.pkl"):
@@ -125,7 +129,7 @@ def get_value(text: str):
             return None
     return None
 
-def extract_command_data(text: str, max_retries: int = 2) -> dict:
+def extract_command_data(text: str, max_retries: int = 1) -> dict:
     db = mode_database.ModeDatabase()
     """
     Extract all command components from the input text.
@@ -135,38 +139,39 @@ def extract_command_data(text: str, max_retries: int = 2) -> dict:
     :param max_retries: Maximum number of retries for missing entities.
     :return: A dictionary containing the command components or None if the command is invalid.
     """
+
+    # Initialize all variables to default values
+    intent = None
+    device = None
+    location = None
+    value = None
+    mode = None  # Initialize mode to None
     intent = get_intent_model(text)
     if intent == "unsupported":
         return {"intent": "unsupported", "device": 'None', "location": 'None', "value": 'None'}
 
-    device = None
-    location = None
-    value = None
-
     if intent in ["turn_on", "turn_off"]:
-        mode = None
         device = get_device(text, devices)
-        location = get_location(text, locations)
-        value = None
-        # Retry for missing device
-        retries = 0
-        while device is None and retries < max_retries:
-            device = uncompleted_command("device")
-            device = get_device(device, devices)
-            retries += 1
+        print(f"Device: {device}")
+        if device != 'camera' and device != 'face id':
+            location = get_location(text, locations)
+            # Retry for missing device
+            retries = 0
+            while device is None and retries < max_retries:
+                device = uncompleted_command("device")
+                device = get_device(device, devices)
+                retries += 1
 
-        # Retry for missing location
-        retries = 0
-        while location is None and retries < max_retries:
-            location = uncompleted_command("location")
-            location = get_location(location, locations)
-            retries += 1
+            # Retry for missing location
+            retries = 0
+            while location is None and retries < max_retries:
+                location = uncompleted_command("location")
+                location = get_location(location, locations)
+                retries += 1
 
     elif intent == "set_temperature":
-        mode = None
         location = get_location(text, locations)
         value = get_value(text)
-        device = None
 
         # Retry for missing location
         retries = 0
@@ -183,8 +188,6 @@ def extract_command_data(text: str, max_retries: int = 2) -> dict:
             retries += 1
 
     elif intent == "set_fan_speed":
-        mode = None
-        device = None
         location = get_location(text, locations)
         value = get_value(text)
 
@@ -203,15 +206,24 @@ def extract_command_data(text: str, max_retries: int = 2) -> dict:
             retries += 1
     
     elif intent == 'execute_mode':
-        device = None
         available_modes = db.get_all_modes()
         mode = get_location(text, available_modes)
+        if mode is None:
+            speaker.text_to_sound("Sorry, this mode not existed , please say the mode name again")
+            recorder.record_audio_silence('mode.wav')
+            mode = speech_to_text_pipeline.transcribe('mode.wav')
+            mode = text_processing.text_preprocessor(mode)
+            mode = get_location(mode, available_modes)
+            if mode is None:
+                speaker.text_to_sound("Sorry, this mode not existed , please try again")
+                return {"intent": "unsupported", "device": 'None', "location": 'None', "value": 'None' , "mode": 'None'}
 
-    # If any required entity is still missing after retries, discard the command
-    if (intent in ["turn_on", "turn_off"] and (device is None or location is None)) or \
-       (intent == "set_temperature" and (location is None or value is None)) or \
-       (intent == "set_fan_speed" and (location is None or value is None)):
-        return {"intent": "unsupported", "device": 'None', "location": 'None', "value": 'None' , "mode": 'None'}
+      
+     # If any required entity is still missing after retries, discard the command
+        if (intent in ["turn_on", "turn_off"] and ((device is None and device != 'camera' and device != 'face id') or (device != 'camera' and device != 'face id' and location is None))) or \
+            (intent == "set_temperature" and (location is None or value is None)) or \
+            (intent == "set_fan_speed" and (location is None or value is None)):
+             return {"intent": "unsupported", "device": 'None', "location": 'None', "value": 'None' , "mode": 'None'}
 
     return {"intent": intent, "device": device, "location": location, "value": value , "mode": mode}
 
@@ -228,7 +240,7 @@ def uncompleted_command (missing_entity:str) -> str:
         speaker.text_to_sound("sorry, what value do you say?")
     
     recorder.record_audio_silence('entity.wav')
-    entity = model.SpeechToTextPipeline().transcribe('entity.wav')
+    entity = speech_to_text_pipeline.transcribe('entity.wav')
     entity = text_processing.text_preprocessor(entity)
     return entity
 
@@ -238,26 +250,28 @@ def uncompleted_command (missing_entity:str) -> str:
 if __name__ == "__main__":
     # Test with different phrasings
     test_phrases = [
-        "set temperature to 25 degrees of the heater in the living room",
-        "set temperature of the heater in the living room to 25",
-        "adjust the living room heater at 23°",
-        "change temperature to 22 in the bedroom heater",
-        "set heater to 30 degrees",
-        "turn on the light in the kitchen",
-        "switch on the fan in the living room",
-        "turn the lights in the living room off",
-        "I want you to turn the fan in the living room off",
-        "could you please turn off the fan in the living room",
-        "enable the ac in the bedroom",
-        "power up the fan in the living room",
-        "make the fan speed 3 in the bedroom",
-        "activate the fan",
-        'Open the lights in the living room',
-        'Open the lights in the living room.',
-        'activate my mode',
-        'activate the lights in the living room',
+        # "set temperature to 25 degrees of the heater in the living room",
+        # "set temperature of the heater in the living room to 25",
+        # "adjust the living room heater at 23°",
+        # "change temperature to 22 in the bedroom heater",
+        # "set heater to 30 degrees",
+        # "turn on the light in the kitchen",
+        # "switch on the fan in the living room",
+        # "turn the lights in the living room off",
+        # "I want you to turn the fan in the living room off",
+        # "could you please turn off the fan in the living room",
+        # "enable the ac in the bedroom",
+        # "power up the fan in the living room",
+        # "make the fan speed 3 in the bedroom",
+        # "activate the fan",
+        # 'Open the lights in the living room',
+        # 'Open the lights in the living room.',
+        # 'activate my mode',
+        # 'activate the lights in the living room',
         'open the main door',
         'tell me a joke',
+        'turn on the camera',
+        'open the face id'
 
 
     ]

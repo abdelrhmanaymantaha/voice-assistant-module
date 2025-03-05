@@ -23,6 +23,7 @@
     {"text": "Activate the kitchen lights", "intent": "turn_on"},
     {"text": "open the bathroom fan", "intent": "turn_on"},
     {"text": "open lights in bathroom", "intent": "turn_on"},
+    {"text": "open the Face ID" , "intent": "turn_on"},
     {"text": "Power on the kitchen AC", "intent": "turn_on"},
     {"text": "Switch on the bedroom fan", "intent": "turn_on"},
     {"text": "Activate the living room lights", "intent": "turn_on"},

@@ -5,45 +5,54 @@ from SpeechToText import model
 from command_execute.mqtt import mqtt_send
 from sql_modes import mode_database
 from TextPreProcessing import text_processing
+
+MQTT_USERNAME = "abdo"
+MQTT_PASSWORD = "234"
+
 def command_execute(command:dict) -> dict:
     if command['intent'] == 'turn_on':
+        mqtt_command =  'on'
+        if command['device'] == 'camera' or command['device'] == 'face id':
+            response_msg = f"Turning on The Face ID Camera"
+            topic = "home/security/camera"
 
-        mqtt_command = {f"{command['device']}" : True}
-        mqtt_send(mqtt_command,username="abdo",password="234",topic=f"home/{command['location']}")
-        response_msg = f"Turning on {command['device']} at {command['location']}"
+        else:
+            topic = f"home/{command['location']}/{command['device']}"
+            response_msg = f"Turning on {command['device']} at {command['location']}"
 
     elif command['intent'] == 'turn_off':
-
-        mqtt_command = {f"{command['device']}" : False}
-        mqtt_send(mqtt_command,username="abdo",password="234",topic=f"home/{command['location']}")
+        mqtt_command = 'off'
+        topic = f"home/{command['location']}/{command['device']}"
         response_msg = f"Turning off {command['device']} at {command['location']}"
 
     elif command['intent'] == 'set_temperature': 
 
-        mqtt_command = {"temperature" : f'{command['value']}'}
-        mqtt_send(mqtt_command,username="abdo",password="234",topic=f"home/{command['location']}")
+        mqtt_command = f'{command['value']}'
+        topic = f"home/{command['location']}/temperature"
         response_msg = f"Setting temperature of {command['device']} at {command['location']} to {command['value']}"
         
     elif command['intent'] == 'set_fan_speed':
 
-        mqtt_command = {"fan" : f'{command['value']}'}
-        mqtt_send(mqtt_command,username="abdo",password="234",topic=f"home/{command['location']}")
+        mqtt_command =f'{command['value']}'
+        topic = f"home/{command['location']}/fan"
         response_msg = f"Setting fan speed at {command['location']} to {command['value']}"
 
     elif command['intent'] == 'open_door':
 
-        mqtt_command = {"door" : True}
-        mqtt_send(mqtt_command,username="abdo",password="234",topic="home/security")
+        mqtt_command =  'on'
+        topic = f"home/security/door"
         response_msg = "Opening the door"
 
     elif command['intent'] == 'close_door':
-
-        mqtt_command = {"door" : False}
-        mqtt_send(mqtt_command,username="abdo",password="234",topic=f"home/security")
+        
+        mqtt_command =  'off'
+        topic = f"home/security/door"
         response_msg = "Closing the door"
 
     elif command['intent'] == 'execute_mode':
+        mqtt_command = None
         mode_name = command['mode']
+        
         print(f"Mode name: {mode_name}")
         db = mode_database.ModeDatabase()
         response_msg = f"Activating mode {mode_name}"
@@ -52,6 +61,7 @@ def command_execute(command:dict) -> dict:
             command_execute(cmd)
 
     elif command['intent'] == 'add_mode':
+        mqtt_command = None
         speaker.text_to_sound('What is the mode name?')
         recorder.record_audio_silence('mode_name.wav')
         mode_name = model.SpeechToTextPipeline().transcribe('mode_name.wav')
@@ -62,8 +72,13 @@ def command_execute(command:dict) -> dict:
         response_msg = f"Mode {mode_name} created successfully"
 
     else:
+        mqtt_command = None
         print("Invalid command!")
         response_msg = None
+    
+    if mqtt_command:
+        mqtt_send(mqtt_command,username=MQTT_USERNAME,password=MQTT_PASSWORD,topic=topic)
+
     return response_msg
 
 
@@ -76,6 +91,11 @@ if __name__ == "__main__":
 
     test_phrases = [
         'activate study mode',
+        'turn on the light in the living room',
+        'turn off the light in the living room',
+        'set the temperature in the living room to 25',
+        'open the door',
+        'turn on the camera',
      ]
     
 

@@ -1,15 +1,11 @@
+
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report
-import joblib
-from TextPreProcessing import text_processing as tp
-import json
-from sklearn.model_selection import GridSearchCV
+
 from sklearn.svm import SVC
-import matplotlib.pyplot as plt
-import seaborn as sns
+
+
 
 class SmartHomeIntentModel:
     def __init__(self):
@@ -21,6 +17,9 @@ class SmartHomeIntentModel:
         """
         Loads the dataset from a JSON file and returns a DataFrame.
         """
+        from TextPreProcessing import text_processing as tp
+        import json
+        
         try:
             # Construct the full path to dataset.json
             file_path = 'Command_extraction/dataset.json'  # Use forward slashes
@@ -42,7 +41,12 @@ class SmartHomeIntentModel:
             return None
 
     def train(self, df):
-        X_train, X_test, y_train, y_test = train_test_split(df["text"], df["intent"], test_size=0.3, random_state=40, stratify=df["intent"])
+        from sklearn.model_selection import GridSearchCV
+        from sklearn.model_selection import train_test_split
+        from sklearn.metrics import classification_report
+
+
+        X_train, X_test, y_train, y_test = train_test_split(df["text"], df["intent"], test_size=0.2, random_state=40, stratify=df["intent"])
         X_train_tfidf = self.vectorizer.fit_transform(X_train)
         X_test_tfidf = self.vectorizer.transform(X_test)
 
@@ -75,10 +79,12 @@ class SmartHomeIntentModel:
 
 
     def save_model(self, model_path, vectorizer_path):
+        import joblib
         joblib.dump(self.model, model_path)
         joblib.dump(self.vectorizer, vectorizer_path)
 
     def load_model(self, model_path, vectorizer_path):
+        import joblib
         self.model = joblib.load(model_path)
         self.vectorizer = joblib.load(vectorizer_path)
 
@@ -120,6 +126,8 @@ class SmartHomeIntentModel:
         """
         Visualizes feature importance using bar plots and heatmaps.
         """
+        import matplotlib.pyplot as plt
+        import seaborn as sns
         for i in range(6):      
             # Plot top features for a specific class
             class_index = i  # Index of the class you want to analyze
@@ -144,6 +152,7 @@ class SmartHomeIntentModel:
 
     
 if __name__ == "__main__":
+    from TextPreProcessing import text_processing as tp
     model = SmartHomeIntentModel()
     df = model.load_data()
     model.train(df)

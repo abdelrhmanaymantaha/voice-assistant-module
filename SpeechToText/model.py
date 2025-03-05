@@ -13,7 +13,7 @@ def patch_torch_load():
         torch.load = original_load
 
 class SpeechToTextPipeline:
-    def __init__(self, model_name="small.en"):
+    def __init__(self, model_name="tiny.en"):
         """Initialize the Whisper model as a pipeline."""
         with patch_torch_load():
             self.model = whisper.load_model(model_name)
